@@ -13,7 +13,7 @@ interface CartContextValue {
   boutiqueId: string | null
   boutiqueNom: string | null
   lignes: LigneCart[]
-  choisirBoutique: (id: string, nom: string) => void
+  choisirBoutique: (id: string | null, nom: string | null) => void
   ajouter: (produit: ProduitCatalogue) => void
   changerQuantite: (produitId: string, quantite: number) => void
   retirer: (produitId: string) => void
@@ -29,9 +29,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [boutiqueNom, setBoutiqueNom] = useState<string | null>(null)
   const [lignes, setLignes] = useState<LigneCart[]>([])
 
-  function choisirBoutique(id: string, nom: string) {
-    // Changer de boutique invalide le panier : prix et disponibilité sont propres à chaque
-    // boutique (CDC §3.5 — "choix de la boutique source"), un panier mixte n'a pas de sens.
+  function choisirBoutique(id: string | null, nom: string | null) {
+    // Changer de boutique (y compris revenir à "Toutes les boutiques", id=null) invalide le
+    // panier : prix et disponibilité sont propres à chaque boutique (CDC §3.5 — "choix de la
+    // boutique source"), un panier mixte n'a pas de sens.
     if (id !== boutiqueId) setLignes([])
     setBoutiqueId(id)
     setBoutiqueNom(nom)

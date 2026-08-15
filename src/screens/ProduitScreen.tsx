@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation, useRoute } from '@react-navigation/native'
-import { useEffect, useState } from 'react'
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { Dimensions, FlatList, Image, Pressable, StyleSheet, Text, View, type NativeSyntheticEvent, type NativeScrollEvent } from 'react-native'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import PickerField from '../components/PickerField'
 import Screen from '../components/Screen'
-import { api } from '../api/client'
+import { api, resolveImageUrl } from '../api/client'
 import { useCart } from '../lib/CartContext'
 import { formatGNF } from '../lib/format'
 import { colors, radius, spacing } from '../lib/theme'
@@ -16,6 +16,59 @@ const SECTEUR_LABELS: Record<string, string> = {
   alimentation_generale: 'Alimentation générale',
   habillement: 'Habillement',
   electronique_electromenager: 'Électronique / Électroménager',
+}
+
+const GALERIE_LARGEUR = Dimensions.get('window').width - spacing.lg * 2
+
+function GalerieImages({ images }: { images: string[] }) {
+  const [index, setIndex] = useState(0)
+  const listRef = useRef<FlatList<string>>(null)
+
+  if (images.length === 0) {
+    return (
+      <View style={[styles.image, styles.imagePlaceholder]}>
+        <Ionicons name="image-outline" size={48} color={colors.inkMuted} />
+      </View>
+    )
+  }
+
+  function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    const i = Math.round(e.nativeEvent.contentOffset.x / GALERIE_LARGEUR)
+    if (i !== index) setIndex(i)
+  }
+
+  return (
+    <View>
+      <FlatList
+        ref={listRef}
+        data={images}
+        keyExtractor={(uri, i) => `${uri}-${i}`}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        renderItem={({ item }) => <Image source={{ uri: resolveImageUrl(item) }} style={styles.image} resizeMode="cover" />}
+      />
+      {images.length > 1 && (
+        <>
+          <View style={styles.galerieCompteur}>
+            <Text style={styles.galerieCompteurText}>{index + 1}/{images.length}</Text>
+          </View>
+          <View style={styles.galeriePoints}>
+            {images.map((_, i) => (
+              <Pressable
+                key={i}
+                hitSlop={8}
+                onPress={() => { listRef.current?.scrollToIndex({ index: i, animated: true }); setIndex(i) }}
+                style={[styles.galeriePoint, i === index && styles.galeriePointActif]}
+              />
+            ))}
+          </View>
+        </>
+      )}
+    </View>
+  )
 }
 
 export default function ProduitScreen() {
@@ -50,13 +103,7 @@ export default function ProduitScreen() {
         <Text style={styles.backRowText}>Retour au catalogue</Text>
       </Pressable>
 
-      {produit.images[0] ? (
-        <Image source={{ uri: produit.images[0] }} style={styles.image} resizeMode="cover" />
-      ) : (
-        <View style={[styles.image, styles.imagePlaceholder]}>
-          <Ionicons name="image-outline" size={48} color={colors.inkMuted} />
-        </View>
-      )}
+      <GalerieImages images={produit.images} />
 
       <View style={styles.info}>
         <Text style={styles.nom}>{produit.nom}</Text>
@@ -100,8 +147,13 @@ export default function ProduitScreen() {
 const styles = StyleSheet.create({
   backRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   backRowText: { color: colors.teal, fontSize: 14, fontWeight: '600' },
-  image: { width: '100%', height: 220, borderRadius: radius.card, backgroundColor: colors.page },
+  image: { width: GALERIE_LARGEUR, height: 220, borderRadius: radius.card, backgroundColor: colors.page },
   imagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  galerieCompteur: { position: 'absolute', top: spacing.sm, right: spacing.sm, backgroundColor: 'rgba(18, 18, 15, 0.55)', borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 3 },
+  galerieCompteurText: { color: colors.white, fontSize: 11.5, fontWeight: '700' },
+  galeriePoints: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: spacing.sm },
+  galeriePoint: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.cardBorder },
+  galeriePointActif: { backgroundColor: colors.teal, width: 16 },
   info: { gap: spacing.xs },
   nom: { fontSize: 19, fontWeight: '800', color: colors.ink },
   categorie: { fontSize: 13, color: colors.inkMuted },

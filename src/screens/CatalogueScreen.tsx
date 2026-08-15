@@ -2,10 +2,9 @@ import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useEffect, useState } from 'react'
 import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
-import Badge from '../components/Badge'
 import PickerField from '../components/PickerField'
 import Screen from '../components/Screen'
-import { api } from '../api/client'
+import { api, resolveImageUrl } from '../api/client'
 import { useCart } from '../lib/CartContext'
 import { formatGNF } from '../lib/format'
 import { colors, radius, spacing } from '../lib/theme'
@@ -62,6 +61,10 @@ export default function CatalogueScreen() {
           label=""
           value={boutiqueId ?? ''}
           onChange={(id) => {
+            if (!id) {
+              choisirBoutique(null, null)
+              return
+            }
             const b = boutiques.find((x) => x.id === id)
             if (b) choisirBoutique(b.id, b.nom)
           }}
@@ -92,20 +95,38 @@ export default function CatalogueScreen() {
         }
         renderItem={({ item }) => (
           <Pressable style={styles.card} onPress={() => navigation.navigate('Produit', { produit: item })}>
-            {item.images[0] ? (
-              <Image source={{ uri: item.images[0] }} style={styles.image} resizeMode="cover" />
-            ) : (
-              <View style={[styles.image, styles.imagePlaceholder]}>
-                <Ionicons name="image-outline" size={28} color={colors.inkMuted} />
-              </View>
-            )}
+            <View>
+              {item.images[0] ? (
+                <Image source={{ uri: resolveImageUrl(item.images[0]) }} style={styles.image} resizeMode="cover" />
+              ) : (
+                <View style={[styles.image, styles.imagePlaceholder]}>
+                  <Ionicons name="image-outline" size={28} color={colors.inkMuted} />
+                </View>
+              )}
+              {item.images.length > 1 && (
+                <View style={styles.photosBadge}>
+                  <Ionicons name="images-outline" size={11} color={colors.white} />
+                  <Text style={styles.photosBadgeText}>{item.images.length}</Text>
+                </View>
+              )}
+              {item.disponible === 0 && (
+                <View style={styles.rupturOverlay}>
+                  <Text style={styles.rupturOverlayText}>Rupture</Text>
+                </View>
+              )}
+            </View>
             <View style={styles.cardBody}>
               <Text style={styles.nom} numberOfLines={2}>{item.nom}</Text>
-              <Text style={styles.prix}>{formatGNF(item.prix_detail)}</Text>
-              {item.disponible > 0 ? (
-                <Badge label={boutiqueId ? `${item.disponible} en stock` : `Disponible — ${item.boutiques_disponibles.length} boutique(s)`} tone="success" />
-              ) : (
-                <Badge label="Rupture de stock" tone="danger" />
+              <View style={styles.prixRow}>
+                <Text style={styles.prix}>{formatGNF(item.prix_detail)}</Text>
+                {item.disponible > 0 && (
+                  <View style={styles.dispoDot} />
+                )}
+              </View>
+              {item.disponible > 0 && (
+                <Text style={styles.dispoText} numberOfLines={1}>
+                  {boutiqueId ? `${item.disponible} en stock` : `${item.boutiques_disponibles.length} boutique(s)`}
+                </Text>
               )}
               <Pressable
                 style={[styles.addButton, item.disponible === 0 && styles.addButtonDisabled]}
@@ -140,6 +161,7 @@ const styles = StyleSheet.create({
   searchWrap: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1, borderColor: colors.inputBorder,
     borderRadius: radius.input, paddingHorizontal: 12, backgroundColor: colors.card,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   search: { flex: 1, paddingVertical: 10, fontSize: 14, color: colors.ink },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
@@ -149,14 +171,30 @@ const styles = StyleSheet.create({
   chipTextActive: { color: colors.tealDark },
   list: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl * 2 },
   row: { gap: spacing.md },
-  card: { flex: 1, backgroundColor: colors.card, borderRadius: radius.card, borderWidth: 1, borderColor: colors.cardBorder, overflow: 'hidden' },
-  image: { width: '100%', height: 110, backgroundColor: colors.page },
+  card: {
+    flex: 1, backgroundColor: colors.card, borderRadius: radius.card, borderWidth: 1, borderColor: colors.cardBorder,
+    overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2,
+  },
+  image: { width: '100%', height: 128, backgroundColor: colors.page },
   imagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  cardBody: { padding: spacing.sm, paddingBottom: 40, gap: 6, position: 'relative' },
+  photosBadge: {
+    position: 'absolute', right: spacing.xs, top: spacing.xs, flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: 'rgba(18, 18, 15, 0.55)', borderRadius: radius.pill, paddingHorizontal: 7, paddingVertical: 3,
+  },
+  photosBadgeText: { color: colors.white, fontSize: 10.5, fontWeight: '700' },
+  rupturOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(18, 18, 15, 0.35)', alignItems: 'center', justifyContent: 'center' },
+  rupturOverlayText: { color: colors.white, fontSize: 12, fontWeight: '700', backgroundColor: colors.danger, paddingHorizontal: 10, paddingVertical: 3, borderRadius: radius.pill },
+  cardBody: { padding: spacing.sm, paddingBottom: 40, gap: 4, position: 'relative' },
   nom: { fontSize: 13, fontWeight: '600', color: colors.ink, minHeight: 34 },
-  prix: { fontSize: 14, fontWeight: '700', color: colors.tealDark },
-  addButton: { position: 'absolute', right: spacing.sm, bottom: spacing.sm, width: 28, height: 28, borderRadius: 14, backgroundColor: colors.teal, alignItems: 'center', justifyContent: 'center' },
-  addButtonDisabled: { backgroundColor: colors.inkMuted },
+  prixRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  prix: { fontSize: 14.5, fontWeight: '800', color: colors.tealDark },
+  dispoDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.success },
+  dispoText: { fontSize: 11, color: colors.inkMuted },
+  addButton: {
+    position: 'absolute', right: spacing.sm, bottom: spacing.sm, width: 28, height: 28, borderRadius: 14, backgroundColor: colors.teal,
+    alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 3, shadowOffset: { width: 0, height: 2 }, elevation: 2,
+  },
+  addButtonDisabled: { backgroundColor: colors.inkMuted, shadowOpacity: 0 },
   empty: { textAlign: 'center', color: colors.inkMuted, marginTop: spacing.xl, paddingHorizontal: spacing.lg },
   boutiqueBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.tealLight, paddingVertical: 8, paddingHorizontal: spacing.lg },
   boutiqueBannerText: { fontSize: 12, color: colors.tealDark, fontWeight: '600' },

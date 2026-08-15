@@ -11,6 +11,14 @@ import type {
 } from '../types/write'
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? 'http://localhost:8000/api/v1'
+const SERVER_BASE = API_BASE.replace(/\/api\/v1\/?$/, '')
+
+// Le backend renvoie soit une URL absolue (fixtures de démo), soit un chemin relatif
+// /uploads/... (upload réel via l'appli web) — même logique de résolution que
+// web/src/pages/Catalogue.tsx (SERVER_BASE + chemin) pour rester cohérent entre canaux.
+export function resolveImageUrl(url: string): string {
+  return /^https?:\/\//.test(url) ? url : `${SERVER_BASE}${url}`
+}
 
 class ApiError extends Error {
   status: number
