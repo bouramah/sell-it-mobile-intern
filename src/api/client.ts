@@ -28,9 +28,10 @@ class ApiError extends Error {
   }
 }
 
+// Distingue ce canal (appli mobile client / grand public) dans le journal d'audit.
 async function authHeaders(): Promise<Record<string, string>> {
   const token = await getToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
+  return { 'X-Client-Canal': 'mobile_client', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
 }
 
 // FastAPI renvoie `detail` en string pour les erreurs métier (400/403/404/409…) mais en
