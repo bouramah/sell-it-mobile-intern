@@ -1,5 +1,14 @@
 import { clearToken, getToken } from '../lib/auth'
-import type { Boutique, Client, CommandeClient, CommandeClientDetail, DemandeCredit, MonCredit, ProduitCatalogue } from '../types'
+import type {
+  Boutique,
+  Client,
+  CommandeClient,
+  CommandeClientDetail,
+  DemandeCredit,
+  MonCredit,
+  ProduitCatalogue,
+  ProduitRecommande,
+} from '../types'
 import type {
   ClientProfilUpdate,
   ClientTokenResponse,
@@ -108,6 +117,13 @@ export const api = {
     const qs = buildQuery(params)
     return getJson<ProduitCatalogue[]>(`/catalogue/produits${qs}`)
   },
+  produit: (id: string, boutiqueId?: string) => getJson<ProduitCatalogue>(`/catalogue/produits/${id}${buildQuery({ boutique_id: boutiqueId })}`),
+  produitsSimilaires: (id: string, boutiqueId?: string) =>
+    getJson<ProduitRecommande[]>(`/catalogue/produits/${id}/similaires${buildQuery({ boutique_id: boutiqueId })}`),
+  produitsComplementaires: (id: string, boutiqueId?: string) =>
+    getJson<ProduitRecommande[]>(`/catalogue/produits/${id}/complementaires${buildQuery({ boutique_id: boutiqueId })}`),
+  tendances: (boutiqueId?: string, secteur?: string) =>
+    getJson<ProduitRecommande[]>(`/catalogue/tendances${buildQuery({ boutique_id: boutiqueId, secteur })}`),
 
   mesCommandes: () => getJson<CommandeClient[]>('/mes-commandes'),
   maCommande: (id: string) => getJson<CommandeClientDetail>(`/mes-commandes/${id}`),

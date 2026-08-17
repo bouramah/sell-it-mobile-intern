@@ -3,12 +3,13 @@ import { useNavigation } from '@react-navigation/native'
 import { useCallback, useEffect, useState } from 'react'
 import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import PickerField from '../components/PickerField'
+import RecommandationRail from '../components/RecommandationRail'
 import Screen from '../components/Screen'
 import { api, resolveImageUrl } from '../api/client'
 import { useCart } from '../lib/CartContext'
 import { formatGNF } from '../lib/format'
 import { colors, radius, spacing } from '../lib/theme'
-import type { Boutique, ProduitCatalogue } from '../types'
+import type { Boutique, ProduitCatalogue, ProduitRecommande } from '../types'
 
 const SECTEUR_LABELS: Record<string, string> = {
   alimentation_generale: 'Alimentation générale',
@@ -21,6 +22,7 @@ export default function CatalogueScreen() {
   const { boutiqueId, boutiqueNom, choisirBoutique, ajouter } = useCart()
   const [boutiques, setBoutiques] = useState<Boutique[]>([])
   const [produits, setProduits] = useState<ProduitCatalogue[]>([])
+  const [tendances, setTendances] = useState<ProduitRecommande[]>([])
   const [query, setQuery] = useState('')
   const [secteur, setSecteur] = useState('')
   const [loading, setLoading] = useState(false)
@@ -28,6 +30,7 @@ export default function CatalogueScreen() {
 
   useEffect(() => {
     api.boutiques().then(setBoutiques).catch(() => {})
+    api.tendances().then(setTendances).catch(() => {})
   }, [])
 
   const refresh = useCallback(() => {
@@ -90,6 +93,15 @@ export default function CatalogueScreen() {
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          !query && tendances.length > 0 ? (
+            <RecommandationRail
+              titre="Tendances du réseau"
+              produits={tendances}
+              onPressProduit={(p) => navigation.navigate('Produit', { produit: p })}
+            />
+          ) : null
+        }
         ListEmptyComponent={
           !loading ? <Text style={styles.empty}>Aucun produit ne correspond à votre recherche.</Text> : null
         }

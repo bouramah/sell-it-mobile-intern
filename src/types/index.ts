@@ -50,6 +50,10 @@ export interface ProduitCatalogue {
   boutiques_disponibles: string[]
 }
 
+export interface ProduitRecommande extends ProduitCatalogue {
+  raison: string
+}
+
 export interface ArticleCommande {
   id: string
   produit_id: string

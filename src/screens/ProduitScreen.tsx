@@ -5,12 +5,13 @@ import { Dimensions, FlatList, Image, Pressable, StyleSheet, Text, View, type Na
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import PickerField from '../components/PickerField'
+import RecommandationRail from '../components/RecommandationRail'
 import Screen from '../components/Screen'
 import { api, resolveImageUrl } from '../api/client'
 import { useCart } from '../lib/CartContext'
 import { formatGNF } from '../lib/format'
 import { colors, radius, spacing } from '../lib/theme'
-import type { Boutique, ProduitCatalogue } from '../types'
+import type { Boutique, ProduitCatalogue, ProduitRecommande } from '../types'
 
 const SECTEUR_LABELS: Record<string, string> = {
   alimentation_generale: 'Alimentation générale',
@@ -72,17 +73,28 @@ function GalerieImages({ images }: { images: string[] }) {
 }
 
 export default function ProduitScreen() {
-  const navigation = useNavigation<{ goBack: () => void }>()
+  const navigation = useNavigation<{ goBack: () => void; navigate: (screen: string, params: unknown) => void }>()
   const route = useRoute<any>()
   const produit = route.params.produit as ProduitCatalogue
   const { boutiqueId, boutiqueNom, choisirBoutique, ajouter } = useCart()
 
   const [boutiques, setBoutiques] = useState<Boutique[]>([])
   const [ajoute, setAjoute] = useState(false)
+  const [similaires, setSimilaires] = useState<ProduitRecommande[]>([])
+  const [complementaires, setComplementaires] = useState<ProduitRecommande[]>([])
 
   useEffect(() => {
     api.boutiques().then((liste) => setBoutiques(liste.filter((b) => produit.boutiques_disponibles.includes(b.id)))).catch(() => {})
   }, [produit.boutiques_disponibles])
+
+  useEffect(() => {
+    api.produitsSimilaires(produit.id).then(setSimilaires).catch(() => {})
+    api.produitsComplementaires(produit.id).then(setComplementaires).catch(() => {})
+  }, [produit.id])
+
+  function voirProduit(p: ProduitRecommande) {
+    navigation.navigate('Produit', { produit: p })
+  }
 
   const boutiqueValide = boutiqueId && produit.boutiques_disponibles.includes(boutiqueId)
 
@@ -140,6 +152,9 @@ export default function ProduitScreen() {
           <Text style={styles.attention}>Ce produit n'est pas disponible dans {boutiqueNom} — choisissez une autre boutique.</Text>
         )}
       </View>
+
+      <RecommandationRail titre="Vous aimerez aussi" produits={similaires} onPressProduit={voirProduit} />
+      <RecommandationRail titre="Souvent acheté avec" produits={complementaires} onPressProduit={voirProduit} />
     </Screen>
   )
 }
