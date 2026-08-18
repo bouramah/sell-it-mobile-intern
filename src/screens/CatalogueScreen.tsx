@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useEffect, useState } from 'react'
-import { FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native'
+import { FlatList, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import PickerField from '../components/PickerField'
 import RecommandationRail from '../components/RecommandationRail'
 import Screen from '../components/Screen'
@@ -75,7 +75,7 @@ export default function CatalogueScreen() {
           placeholder="Toutes les boutiques"
           allowEmpty="Toutes les boutiques"
         />
-        <View style={styles.chips}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           <Pressable style={[styles.chip, !secteur && styles.chipActive]} onPress={() => setSecteur('')}>
             <Text style={[styles.chipText, !secteur && styles.chipTextActive]}>Tous</Text>
           </Pressable>
@@ -84,7 +84,7 @@ export default function CatalogueScreen() {
               <Text style={[styles.chipText, secteur === value && styles.chipTextActive]}>{label}</Text>
             </Pressable>
           ))}
-        </View>
+        </ScrollView>
       </View>
 
       <FlatList
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
   search: { flex: 1, paddingVertical: 10, fontSize: 14, color: colors.ink },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  chips: { flexDirection: 'row', gap: spacing.xs },
   chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder },
   chipActive: { backgroundColor: colors.tealLight, borderColor: colors.tealBorder },
   chipText: { fontSize: 12, color: colors.inkMuted, fontWeight: '600' },
