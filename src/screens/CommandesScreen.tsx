@@ -1,5 +1,5 @@
-import { useNavigation } from '@react-navigation/native'
-import { useCallback, useEffect, useState } from 'react'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useCallback, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import Badge, { type BadgeTone } from '../components/Badge'
 import RequireAuth from '../components/RequireAuth'
@@ -29,7 +29,10 @@ function CommandesListe() {
     api.mesCommandes().then(setCommandes).catch((e) => setError(e instanceof Error && e.message ? e.message : 'Échec du chargement.')).finally(() => setLoading(false))
   }, [])
 
-  useEffect(refresh, [refresh])
+  // useFocusEffect (pas useEffect) : sans ça, une commande passée depuis l'onglet Panier
+  // n'apparaîtrait qu'après redémarrage de l'appli, l'onglet Commandes restant monté en
+  // arrière-plan par React Navigation.
+  useFocusEffect(refresh)
 
   return (
     <Screen title="Mes commandes" onRefresh={refresh} refreshing={loading} error={error}>

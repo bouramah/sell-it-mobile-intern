@@ -129,6 +129,9 @@ export const api = {
   maCommande: (id: string) => getJson<CommandeClientDetail>(`/mes-commandes/${id}`),
   creerMaCommande: (payload: MaCommandeCreate) => sendJson<CommandeClientDetail>('POST', '/mes-commandes', payload),
 
+  envoyerMessageAssistant: (message: string, historique: { auteur: string; texte: string }[]) =>
+    sendJson<{ reponse: string }>('POST', '/mon-assistant/message', { message, historique }),
+
   monCredit: () => getJson<MonCredit>('/mon-credit'),
   mesDemandesCredit: () => getJson<DemandeCredit[]>('/mon-credit/demandes'),
   demanderCredit: (payload: DemandeCreditCreate) => sendJson<DemandeCredit>('POST', '/mon-credit/demandes', payload),

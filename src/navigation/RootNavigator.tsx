@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import AssistantScreen from '../screens/AssistantScreen'
 import CatalogueScreen from '../screens/CatalogueScreen'
 import CommandeDetailScreen from '../screens/CommandeDetailScreen'
 import CommandesScreen from '../screens/CommandesScreen'
@@ -68,6 +69,7 @@ function CompteNavigator() {
     <CompteStack.Navigator screenOptions={{ headerShown: false }}>
       <CompteStack.Screen name="CompteAccueil" component={CompteScreen} />
       <CompteStack.Screen name="Credit" component={CreditScreen} />
+      <CompteStack.Screen name="Assistant" component={AssistantScreen} />
     </CompteStack.Navigator>
   )
 }

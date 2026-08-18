@@ -1,5 +1,5 @@
-import { useNavigation } from '@react-navigation/native'
-import { useState } from 'react'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useCallback, useState } from 'react'
 import { Alert, StyleSheet, Text, View } from 'react-native'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -23,6 +23,15 @@ function CompteContenu() {
   const [nom, setNom] = useState(client?.nom ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Le profil (dont credit_autorise, lu par CreditScreen) n'est sinon chargé qu'une fois au
+  // lancement de l'appli — sans ça, une activation de crédit côté staff resterait invisible
+  // jusqu'à une reconnexion.
+  useFocusEffect(
+    useCallback(() => {
+      refreshProfil()
+    }, [refreshProfil])
+  )
 
   async function handleEnregistrer() {
     if (!nom.trim()) {
@@ -84,6 +93,12 @@ function CompteContenu() {
         subtitle={client.credit_autorise ? 'Solde, échéances et demandes' : "Non activé — rendez-vous en boutique"}
         icon="card-outline"
         onPress={() => navigation.navigate('Credit')}
+      />
+      <ListRow
+        title="Assistant IA"
+        subtitle="Posez une question sur vos commandes ou votre crédit"
+        icon="chatbubbles-outline"
+        onPress={() => navigation.navigate('Assistant')}
       />
       <ListRow title="Déconnexion" subtitle="Se déconnecter de l'appli" icon="log-out-outline" onPress={confirmerDeconnexion} danger />
     </Screen>
