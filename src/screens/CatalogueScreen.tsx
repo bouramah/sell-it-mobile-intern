@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useEffect, useState } from 'react'
-import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native'
 import PickerField from '../components/PickerField'
 import RecommandationRail from '../components/RecommandationRail'
 import Screen from '../components/Screen'
@@ -48,7 +48,7 @@ export default function CatalogueScreen() {
   useEffect(refresh, [refresh])
 
   return (
-    <Screen title="Catalogue" onRefresh={refresh} refreshing={loading} error={loadError} scroll={false}>
+    <Screen title="Catalogue" error={loadError} scroll={false}>
       <View style={styles.filtres}>
         <View style={styles.searchWrap}>
           <Ionicons name="search" size={16} color={colors.inkMuted} />
@@ -93,6 +93,7 @@ export default function CatalogueScreen() {
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.teal} />}
         ListHeaderComponent={
           !query && tendances.length > 0 ? (
             <RecommandationRail
