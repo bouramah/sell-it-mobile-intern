@@ -33,10 +33,10 @@ export default function CatalogueScreen() {
   }, [])
 
   useEffect(() => {
-    // Scopé à la boutique choisie quand il y en a une — des tendances réseau entier n'ont pas
-    // de sens pour un client qui ne peut acheter que dans une boutique précise.
-    api.tendances(boutiqueId || undefined).then(setTendances).catch(() => {})
-  }, [boutiqueId])
+    // Scopé à la boutique et au secteur choisis — sinon "Populaire en ce moment" continue de
+    // montrer des articles hors du secteur filtré juste en dessous, incohérent avec la grille.
+    api.tendances(boutiqueId || undefined, secteur || undefined).then(setTendances).catch(() => {})
+  }, [boutiqueId, secteur])
 
   const refresh = useCallback(() => {
     setLoading(true)
