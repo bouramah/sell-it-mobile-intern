@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
-import { useRef, useState } from 'react'
-import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import Screen from '../components/Screen'
 import { api } from '../api/client'
 import { colors, radius, spacing } from '../lib/theme'
@@ -16,7 +16,16 @@ export default function AssistantScreen() {
   const [messages, setMessages] = useState<Message[]>([])
   const [saisie, setSaisie] = useState('')
   const [envoiEnCours, setEnvoiEnCours] = useState(false)
+  const [chargement, setChargement] = useState(true)
   const listRef = useRef<FlatList<Message>>(null)
+
+  useEffect(() => {
+    api
+      .historiqueAssistant()
+      .then((h) => setMessages(h.map((m) => ({ auteur: m.auteur === 'client' ? 'client' : 'bot', texte: m.texte }))))
+      .catch(() => {})
+      .finally(() => setChargement(false))
+  }, [])
 
   async function envoyer() {
     const texte = saisie.trim()
@@ -44,29 +53,42 @@ export default function AssistantScreen() {
         <Text style={styles.backRowText}>Retour</Text>
       </Pressable>
 
+      <View style={styles.avertissement}>
+        <Ionicons name="information-circle-outline" size={14} color={colors.inkMuted} />
+        <Text style={styles.avertissementTexte}>
+          Réponses générées par une IA — peuvent contenir des erreurs. Vérifiez les informations importantes.
+        </Text>
+      </View>
+
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80}>
-        <FlatList
-          ref={listRef}
-          data={messages}
-          keyExtractor={(_, i) => String(i)}
-          contentContainerStyle={styles.liste}
-          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-          ListEmptyComponent={
-            <View style={styles.vide}>
-              <Ionicons name="chatbubbles-outline" size={36} color={colors.inkMuted} />
-              <Text style={styles.videTexte}>
-                Posez une question sur vos commandes, votre crédit, ou le fonctionnement de KFSTORE.
-              </Text>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <View style={[styles.bulleWrap, item.auteur === 'client' ? styles.bulleWrapClient : styles.bulleWrapBot]}>
-              <View style={[styles.bulle, item.auteur === 'client' ? styles.bulleClient : styles.bulleBot]}>
-                <Text style={item.auteur === 'client' ? styles.texteClient : styles.texteBot}>{item.texte}</Text>
+        {chargement ? (
+          <View style={styles.vide}>
+            <ActivityIndicator color={colors.teal} />
+          </View>
+        ) : (
+          <FlatList
+            ref={listRef}
+            data={messages}
+            keyExtractor={(_, i) => String(i)}
+            contentContainerStyle={styles.liste}
+            onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+            ListEmptyComponent={
+              <View style={styles.vide}>
+                <Ionicons name="chatbubbles-outline" size={36} color={colors.inkMuted} />
+                <Text style={styles.videTexte}>
+                  Posez une question sur vos commandes, votre crédit, ou le fonctionnement de KFSTORE.
+                </Text>
               </View>
-            </View>
-          )}
-        />
+            }
+            renderItem={({ item }) => (
+              <View style={[styles.bulleWrap, item.auteur === 'client' ? styles.bulleWrapClient : styles.bulleWrapBot]}>
+                <View style={[styles.bulle, item.auteur === 'client' ? styles.bulleClient : styles.bulleBot]}>
+                  <Text style={item.auteur === 'client' ? styles.texteClient : styles.texteBot}>{item.texte}</Text>
+                </View>
+              </View>
+            )}
+          />
+        )}
         {envoiEnCours && <Text style={styles.enCours}>L'assistant écrit…</Text>}
         <View style={styles.saisieRow}>
           <TextInput
@@ -94,6 +116,11 @@ export default function AssistantScreen() {
 const styles = StyleSheet.create({
   backRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
   backRowText: { color: colors.teal, fontSize: 14, fontWeight: '600' },
+  avertissement: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: spacing.lg, paddingVertical: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  avertissementTexte: { flex: 1, fontSize: 11, color: colors.inkMuted },
   flex: { flex: 1 },
   liste: { padding: spacing.lg, gap: spacing.sm, flexGrow: 1 },
   vide: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingTop: spacing.xl * 2 },

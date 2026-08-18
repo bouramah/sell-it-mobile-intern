@@ -131,6 +131,7 @@ export const api = {
 
   envoyerMessageAssistant: (message: string, historique: { auteur: string; texte: string }[]) =>
     sendJson<{ reponse: string }>('POST', '/mon-assistant/message', { message, historique }),
+  historiqueAssistant: () => getJson<{ auteur: string; texte: string; horodatage: string }[]>('/mon-assistant/historique'),
 
   monCredit: () => getJson<MonCredit>('/mon-credit'),
   mesDemandesCredit: () => getJson<DemandeCredit[]>('/mon-credit/demandes'),
