@@ -30,8 +30,13 @@ export default function CatalogueScreen() {
 
   useEffect(() => {
     api.boutiques().then(setBoutiques).catch(() => {})
-    api.tendances().then(setTendances).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    // Scopé à la boutique choisie quand il y en a une — des tendances réseau entier n'ont pas
+    // de sens pour un client qui ne peut acheter que dans une boutique précise.
+    api.tendances(boutiqueId || undefined).then(setTendances).catch(() => {})
+  }, [boutiqueId])
 
   const refresh = useCallback(() => {
     setLoading(true)
@@ -97,7 +102,7 @@ export default function CatalogueScreen() {
         ListHeaderComponent={
           !query && tendances.length > 0 ? (
             <RecommandationRail
-              titre="Tendances du réseau"
+              titre={boutiqueNom ? `Populaire à ${boutiqueNom}` : 'Populaire en ce moment'}
               produits={tendances}
               onPressProduit={(p) => navigation.navigate('Produit', { produit: p })}
             />
