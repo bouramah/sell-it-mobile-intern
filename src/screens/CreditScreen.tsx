@@ -18,6 +18,7 @@ import { MODE_PAIEMENT_LABELS, type Boutique, type DemandeCredit, type LigneDett
 const STATUT_DETTE_LABELS: Record<string, string> = { en_cours: 'En cours', reglee: 'Réglée', en_retard: 'En retard' }
 const STATUT_DETTE_TONE: Record<string, BadgeTone> = { en_cours: 'info', reglee: 'success', en_retard: 'danger' }
 const STATUT_DEMANDE_LABELS: Record<StatutDemandeCredit, string> = { en_attente: 'En attente', validee: 'Validée', refusee: 'Refusée' }
+const STATUT_DEMANDE_LABELS_ENSEIGNANT: Record<StatutDemandeCredit, string> = { en_attente: 'En attente de vos garants', validee: 'Validée', refusee: 'Refusée' }
 const STATUT_DEMANDE_TONE: Record<StatutDemandeCredit, BadgeTone> = { en_attente: 'warning', validee: 'success', refusee: 'danger' }
 
 const MODES_REMBOURSEMENT: { value: ModePaiement; label: string }[] = [
@@ -123,7 +124,24 @@ export default function CreditScreen() {
         </Card>
       ) : (
         <>
-          <StatCard label="Solde restant dû" value={formatGNF(monCredit?.solde_total ?? 0)} icon="card" color={colors.danger} />
+          <View style={styles.statRow}>
+            <StatCard label="Solde restant dû" value={formatGNF(monCredit?.solde_total ?? 0)} icon="card" color={colors.danger} />
+            {monCredit?.enseignant && (
+              <StatCard label="Plafond disponible" value={formatGNF(monCredit.enseignant.plafond_disponible)} icon="school-outline" color={colors.teal} />
+            )}
+          </View>
+
+          {monCredit?.enseignant && (
+            <Text style={styles.ecoleText}>École : {monCredit.enseignant.ecole_nom}</Text>
+          )}
+
+          {monCredit?.enseignant?.plafond_suspendu && (
+            <Card style={styles.attenteCard}>
+              <Text style={styles.attenteText}>
+                Votre plafond de crédit est suspendu suite à un impayé. Réglez votre créance en cours pour le réactiver.
+              </Text>
+            </Card>
+          )}
 
           <Text style={styles.sectionTitle}>Créances en cours</Text>
           {(monCredit?.dettes ?? []).length === 0 && <Text style={styles.empty}>Aucune créance en cours.</Text>}
@@ -155,11 +173,18 @@ export default function CreditScreen() {
                 <Text style={styles.demandeMontant}>{formatGNF(d.montant_souhaite)}</Text>
                 <Text style={styles.demandeMotif} numberOfLines={1}>{d.motif}</Text>
               </View>
-              <Badge label={STATUT_DEMANDE_LABELS[d.statut]} tone={STATUT_DEMANDE_TONE[d.statut]} />
+              <Badge
+                label={(monCredit?.enseignant ? STATUT_DEMANDE_LABELS_ENSEIGNANT : STATUT_DEMANDE_LABELS)[d.statut]}
+                tone={STATUT_DEMANDE_TONE[d.statut]}
+              />
             </View>
           ))}
 
-          <Button label="Nouvelle demande de crédit" icon="add-circle-outline" onPress={() => setDemandeOuverte(true)} />
+          {monCredit?.enseignant?.plafond_suspendu ? (
+            <Text style={styles.empty}>Nouvelle demande indisponible tant que votre plafond est suspendu.</Text>
+          ) : (
+            <Button label="Nouvelle demande de crédit" icon="add-circle-outline" onPress={() => setDemandeOuverte(true)} />
+          )}
         </>
       )}
 
@@ -221,6 +246,10 @@ const styles = StyleSheet.create({
   backRowText: { color: colors.teal, fontSize: 14, fontWeight: '600' },
   nonActifTitle: { fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: spacing.sm },
   nonActifText: { fontSize: 13, color: colors.inkMuted, marginTop: 4, lineHeight: 18 },
+  statRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  ecoleText: { fontSize: 12.5, color: colors.inkMuted },
+  attenteCard: { backgroundColor: colors.warningBg, borderColor: colors.warning },
+  attenteText: { fontSize: 12.5, color: colors.warning },
   sectionTitle: { fontSize: 13, fontWeight: '700', color: colors.inkMuted2, marginTop: spacing.sm },
   empty: { fontSize: 13, color: colors.inkMuted },
   detteCard: { gap: spacing.sm },

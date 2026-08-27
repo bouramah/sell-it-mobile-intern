@@ -117,11 +117,18 @@ export interface Remboursement {
   operateur: string
 }
 
+export interface InfosEnseignant {
+  ecole_nom: string
+  plafond_disponible: number
+  plafond_suspendu: boolean
+}
+
 export interface MonCredit {
   credit_autorise: boolean
   solde_total: number
   dettes: LigneDetteClient[]
   remboursements: Remboursement[]
+  enseignant: InfosEnseignant | null
 }
 
 export interface DemandeCredit {
