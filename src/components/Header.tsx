@@ -11,7 +11,7 @@ export default function Header({ title }: { title: string }) {
   return (
     <View style={styles.wrap}>
       <View style={styles.row}>
-        <Image source={require('../../assets/logo.jpeg')} style={styles.logo} resizeMode="contain" />
+        <Image source={require('../../assets/logo-transparent.png')} style={styles.logo} resizeMode="contain" />
         <Pressable onPress={() => navigation.navigate('Panier')} style={styles.cart} hitSlop={8}>
           <Ionicons name="cart-outline" size={22} color={colors.ink} />
           {nbArticles > 0 && (

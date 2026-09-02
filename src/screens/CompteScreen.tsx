@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback, useState } from 'react'
-import { Alert, StyleSheet, Text, View } from 'react-native'
+import { Alert, Linking, StyleSheet, Text, View } from 'react-native'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import ListRow from '../components/ListRow'
@@ -99,6 +99,12 @@ function CompteContenu() {
         subtitle="Posez une question sur vos commandes ou votre crédit"
         icon="chatbubbles-outline"
         onPress={() => navigation.navigate('Assistant')}
+      />
+      <ListRow
+        title="Conditions d'utilisation"
+        subtitle="Confidentialité et mentions légales"
+        icon="document-text-outline"
+        onPress={() => Linking.openURL('https://admin.kfstore-gn.com/legal')}
       />
       <ListRow title="Déconnexion" subtitle="Se déconnecter de l'appli" icon="log-out-outline" onPress={confirmerDeconnexion} danger />
     </Screen>
